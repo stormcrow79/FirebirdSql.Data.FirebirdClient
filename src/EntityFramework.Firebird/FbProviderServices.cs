@@ -39,6 +39,8 @@ public class FbProviderServices : DbProviderServices
 	public const string ProviderInvariantName = "FirebirdSql.Data.FirebirdClient";
 	public static readonly FbProviderServices Instance = new FbProviderServices();
 
+	private string connectionCharset;
+
 	public FbProviderServices()
 	{
 		AddDependencyResolver(new SingletonDependencyResolver<IDbConnectionFactory>(new FbConnectionFactory()));
@@ -65,7 +67,7 @@ public class FbProviderServices : DbProviderServices
 
 		var command = FbCommand.CreateWithTypeCoercions(expectedTypes);
 
-		command.CommandText = SqlGenerator.GenerateSql(commandTree, out var parameters, out var commandType);
+		command.CommandText = SqlGenerator.GenerateSql(commandTree, out var parameters, out var commandType, connectionCharset);
 		command.CommandType = commandType;
 
 		// Get the function (if any) implemented by the command tree since this influences our interpretation of parameters
@@ -118,6 +120,8 @@ public class FbProviderServices : DbProviderServices
 	{
 		try
 		{
+			this.connectionCharset = new FbConnectionStringBuilder(connection.ConnectionString).Charset;
+
 			var serverVersion = default(Version);
 			if (connection.State == ConnectionState.Open)
 			{

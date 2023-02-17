@@ -109,7 +109,8 @@ internal static class DmlSqlGenerator
 		return commandText.ToString();
 	}
 
-	internal static string GenerateInsertSql(DbInsertCommandTree tree, out List<DbParameter> parameters, bool generateParameters = true)
+	internal static string GenerateInsertSql(DbInsertCommandTree tree, out List<DbParameter> parameters,
+											 bool generateParameters = true, string connectionCharset = null)
 	{
 		var commandText = new StringBuilder(CommandTextBuilderInitialCapacity);
 		var translator = new ExpressionTranslator(commandText, tree, null != tree.Returning, generateParameters);
@@ -162,7 +163,7 @@ internal static class DmlSqlGenerator
 			commandText.AppendLine("DEFAULT VALUES");
 		}
 		// generate returning sql
-		GenerateReturningSql(commandText, tree, translator, tree.Returning);
+		GenerateReturningSql(commandText, tree, translator, tree.Returning, connectionCharset);
 
 		parameters = translator.Parameters;
 		return commandText.ToString();
@@ -180,7 +181,8 @@ internal static class DmlSqlGenerator
 		StringBuilder commandText,
 		DbModificationCommandTree tree,
 		ExpressionTranslator translator,
-		DbExpression returning)
+		DbExpression returning,
+		string connectionString = null)
 	{
 		// Nothing to do if there is no Returning expression
 		if (returning == null)
@@ -209,8 +211,8 @@ internal static class DmlSqlGenerator
 				startBlock.Append(" ");
 				var member = translator.MemberValues.First(m => m.Value.Contains(param)).Key;
 				startBlock.Append(SqlGenerator.GetSqlPrimitiveType(member.TypeUsage));
-				if (param.FbDbType == FbDbType.VarChar || param.FbDbType == FbDbType.Char)
-					startBlock.Append(" CHARACTER SET UTF8");
+				if (!string.IsNullOrWhiteSpace(connectionString))
+					startBlock.Append($" CHARACTER SET {connectionString}");
 				startBlock.Append(" = ");
 				startBlock.Append(param.ParameterName);
 

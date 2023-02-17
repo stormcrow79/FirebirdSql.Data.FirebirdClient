@@ -229,15 +229,19 @@ internal sealed class SqlGenerator : DbExpressionVisitor<ISqlFragment>
 	#endregion
 
 	#region Entry points
+
 	/// <summary>
 	/// General purpose static function that can be called from System.Data assembly
 	/// </summary>
-	/// <param name="sqlVersion">Server version</param>
 	/// <param name="tree">command tree</param>
 	/// <param name="parameters">Parameters to add to the command tree corresponding
-	/// to constants in the command tree. Used only in ModificationCommandTrees.</param>
+	///     to constants in the command tree. Used only in ModificationCommandTrees.</param>
+	/// <param name="commandType"></param>
+	/// <param name="connectionCharset"></param>
+	/// <param name="sqlVersion">Server version</param>
 	/// <returns>The string representing the SQL to be executed.</returns>
-	internal static string GenerateSql(DbCommandTree tree, out List<DbParameter> parameters, out CommandType commandType)
+	internal static string GenerateSql(DbCommandTree tree, out List<DbParameter> parameters,
+									   out CommandType commandType, string connectionCharset)
 	{
 		commandType = CommandType.Text;
 
@@ -263,7 +267,7 @@ internal sealed class SqlGenerator : DbExpressionVisitor<ISqlFragment>
 		//Handle Insert
 		if (tree is DbInsertCommandTree insertCommandTree)
 		{
-			return DmlSqlGenerator.GenerateInsertSql(insertCommandTree, out parameters);
+			return DmlSqlGenerator.GenerateInsertSql(insertCommandTree, out parameters, true, connectionCharset);
 		}
 
 		//Handle Delete
