@@ -15,12 +15,59 @@
 
 //$Authors = Jiri Cincura (jiri@cincura.net)
 
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+
 namespace Scratchpad;
 
 class Program
 {
 	static void Main(string[] args)
 	{
-		// Scratchpad
+		var connectionString =
+			"DataSource=localhost;Port=3050;" +
+			"User=SYSDBA;Password=masterkey;" +
+			"Database=employee;" +
+			"Character Set=ISO8859_1;";
+
+		var options = new DbContextOptionsBuilder()
+			.UseFirebird(connectionString)
+			.LogTo(Console.WriteLine, minimumLevel: Microsoft.Extensions.Logging.LogLevel.Information)
+			.Options;
+
+		var context = new Context(options);
+
+		context.Database.GetDbConnection().Open();
+
+		context.Test.Add(new Test()
+		{
+			Name = "Entr\u00E9e",
+		});
+
+		// the computed column causes a block to be generated
+		// EXECUTE BLOCK (p0 VARCHAR(50) CHARACTER SET UTF8 = @p0)
+		// RETURNS ("ID" INT, "MODIFIED" TIMESTAMP)
+		// the input parameter should be declared as WIN1252 to match the connection string
+
+		context.SaveChanges();
+	}
+
+	[Table("TESTS")]
+	public class Test
+	{
+		[Column("ID")]
+		public int Id { get; set; }
+
+		[Column("NAME", TypeName = "varchar(50)")]
+		public string Name { get; set; }
+	}
+
+	public class Context : DbContext
+	{
+		public Context(DbContextOptions options) : base(options) { }
+
+		public DbSet<Test> Test { get; set; }
 	}
 }
