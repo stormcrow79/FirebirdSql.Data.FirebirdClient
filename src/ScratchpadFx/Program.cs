@@ -10,8 +10,8 @@ create table tests (
     name varchar(50) character set none,
     modified timestamp computed by (localtimestamp));
 
-insert into tests (name)
-    values (' O’Grady');
+insert into tests (name) values ('O’Grady'); // win-1252
+insert into tests (name) values ('Entrée');  // iso-8858-1
 
  */
 
@@ -40,7 +40,8 @@ namespace ScratchpadFx
 
 			context.Test.Add(new Test()
 			{
-				Name = "O\u2019Grady"
+				//Name = "O\u2019Grady"
+				Name = "Entr\u00E9e",
 			});
 
 			// the computed column causes a block to be generated
